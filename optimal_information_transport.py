@@ -1,5 +1,5 @@
 """
-Solvers for matching or reconstruction with optimal information transportation.
+Solvers for matching or reconstruction with optimal information transport.
 """
 
 # Imports for common Python 2/3 codebase
@@ -13,7 +13,7 @@ from odl.operator import IdentityOperator
 standard_library.install_aliases()
 
 
-def OIT_solver_least_square(forward_op, I, data, niter, eps, lamb,
+def OIT_solver_least_square(forward_op, I0, data, niter, eps, lamb,
                             inverse_inertia_op, impl='mp', callback=None):
     """
     Solver for matching or shape based reconstruction using OIT with
@@ -23,10 +23,10 @@ def OIT_solver_least_square(forward_op, I, data, niter, eps, lamb,
     -----
     The model is:
         
-        .. math:: \min_{\phi\in Diff(\Omega)} \lambda \|\sqrt{|D\phi^{-1}|} - 1\|_2^2 + \|T(\phi.I) - g)\|_2^2,
+        .. math:: \min_{\phi\in Diff(\Omega)} \lambda \|\sqrt{|D\phi^{-1}|} - 1\|_2^2 + \|T(\phi.I_0) - g)\|_2^2,
     
-    where :math:`\phi.I := |D\phi^{-1}| I \circ \phi^{-1}` mass-preserving
-    deformation, or :math:`\phi.I := I \circ \phi^{-1}` geometric
+    where :math:`\phi.I_0 := |D\phi^{-1}| I_0 \circ \phi^{-1}` mass-preserving
+    deformation, or :math:`\phi.I_0 := I_0 \circ \phi^{-1}` geometric
     deformation. If :math:`T` is identity operator, the above model reduces
     to image matching. If :math:`T` is forward projection operator,
     the above model is for image reconstruction.
@@ -35,7 +35,7 @@ def OIT_solver_least_square(forward_op, I, data, niter, eps, lamb,
     ----------
     forward_op : `Operator`
         The forward operator of imaging.
-    I: `DiscreteLpElement`
+    I0: `DiscreteLpElement`
         Fixed template.
     data : `DiscreteLpElement`
         The given data.
@@ -56,13 +56,13 @@ def OIT_solver_least_square(forward_op, I, data, niter, eps, lamb,
         Show the iterates.
     """
     # Create image space
-    image_space = I.space
+    image_space = I0.space
 
     # Initialize the Jacobian determinant of inverse deformation
     DPhiJacobian = image_space.one()
 
     # Initialize the geometric deformed template
-    non_mp_deform_I = I
+    non_mp_deform_I0 = I0
 
     # Create gradient and divergence operators
     grad_op = Gradient(image_space, method='forward', pad_mode='symmetric')
@@ -86,7 +86,7 @@ def OIT_solver_least_square(forward_op, I, data, niter, eps, lamb,
 
         # Implementation for mass-preserving case
         if impl == 'mp':
-            PhiStarI = DPhiJacobian * non_mp_deform_I
+            PhiStarI = DPhiJacobian * non_mp_deform_I0
             grads = gradS(PhiStarI)
             tmp = grad_op(grads)
             for i in range(tmp.size):
@@ -94,7 +94,7 @@ def OIT_solver_least_square(forward_op, I, data, niter, eps, lamb,
 
         # Implementation for geometric case
         if impl == 'geom':
-            PhiStarI = non_mp_deform_I
+            PhiStarI = non_mp_deform_I0
             grads = gradS(PhiStarI)
             tmp = - grad_op(PhiStarI)
             for i in range(tmp.size):
@@ -117,8 +117,8 @@ def OIT_solver_least_square(forward_op, I, data, niter, eps, lamb,
         # print(np.sum(PhiStarX))
 
         # Update the non-mass-preserving deformation of template
-        non_mp_deform_I = image_space.element(
-            _linear_deform(non_mp_deform_I, - eps * v))
+        non_mp_deform_I0 = image_space.element(
+            _linear_deform(non_mp_deform_I0, - eps * v))
 
         # Update the determinant of Jacobian of inverse deformation
         # Old implementation for updating Jacobian determinant
@@ -238,7 +238,7 @@ def OIT_solver(forward_op, template, data, niter, eps, lamb,
     
     The regularization term in model is:
         
-        .. math:: \lambda \|\sqrt{|D\phi^{-1}|} - 1\|^2
+        .. math:: \lambda \|\sqrt{|D\phi^{-1}|} - 1\|_2^2
     
     where :math:`|D\phi^{-1}|` is the Jacobian determinant of the inverse
     of diffeomorphic deformation.
