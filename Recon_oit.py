@@ -16,17 +16,17 @@ def kernel(x):
 
 
 # Give input images
-I0name = './pictures/j.png' # 64 * 64 ---> 92
-I1name = './pictures/v.png' # 64 * 64 ---> 92
-#I0name = './pictures/handnew2.png' # 256 * 256 ---> 362
-#I1name = './pictures/handnew1.png' # 256 * 256 ---> 362
+#I0name = './pictures/j.png' # 64 * 64 ---> 92
+#I1name = './pictures/v.png' # 64 * 64 ---> 92
+I0name = './pictures/handnew2.png' # 256 * 256 ---> 362
+I1name = './pictures/handnew1.png' # 256 * 256 ---> 362
 
 ## Get digital images
 I0 = np.rot90(plt.imread(I0name).astype('float'), -1)
 I1 = np.rot90(plt.imread(I1name).astype('float'), -1)
 
 # Discrete reconstruction space: discretized functions on the rectangle
-space = odl.uniform_discr(min_pt=[-16, -16], max_pt=[16, 16], shape=[64, 64],
+space = odl.uniform_discr(min_pt=[-16, -16], max_pt=[16, 16], shape=[256, 256],
     dtype='float32', interp='linear')
 
 # Create the ground truth as the given image
