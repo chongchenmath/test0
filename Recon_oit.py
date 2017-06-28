@@ -20,13 +20,15 @@ def kernel(x):
 #I1name = './pictures/v.png' # 64 * 64 ---> 92
 I0name = './pictures/handnew2.png' # 256 * 256 ---> 362
 I1name = './pictures/handnew1.png' # 256 * 256 ---> 362
+#I0name = './pictures/ss_save_1.png' # 438 * 438 ---> 620
+#I1name = './pictures/ss_save.png' # 438 * 438 ---> 620
 
 ## Get digital images
-I0 = np.rot90(plt.imread(I0name).astype('float'), -1)
-I1 = np.rot90(plt.imread(I1name).astype('float'), -1)
+I0 = np.rot90(plt.imread(I0name).astype('float'), -1)[:, :]
+I1 = np.rot90(plt.imread(I1name).astype('float'), -1)[:, :]
 
 # Discrete reconstruction space: discretized functions on the rectangle
-space = odl.uniform_discr(min_pt=[-16, -16], max_pt=[16, 16], shape=[256, 256],
+space = odl.uniform_discr(min_pt=[-16, -16], max_pt=[16, 16], shape=I0.shape,
     dtype='float32', interp='linear')
 
 # Create the ground truth as the given image
@@ -73,7 +75,7 @@ ker_style = 'poisson'
 # The metric chooses 'least_square' or 'fisher_rao', 'least_square' means using
 # l2-norm least square fitting term, 'fisher_rao'  meams using Fisher-Rao
 # fitting term 
-metric = 'fisher_rao'
+metric = 'least_square'
 
 # Show intermiddle results
 callback = odl.solvers.CallbackShow(
@@ -83,34 +85,36 @@ callback = odl.solvers.CallbackShow(
 # Normalize the template's density as the same as the ground truth if consider
 # mass preserving method
 if group_action == 'mp':
-#    template *= np.sum(ground_truth) / np.sum(template)
-    template *= np.linalg.norm(ground_truth, 'fro')/ \
-        np.linalg.norm(template, 'fro')
+    template *= np.sum(ground_truth) / np.sum(template)
+#    template *= np.linalg.norm(ground_truth, 'fro')/ \
+#        np.linalg.norm(template, 'fro')
 
 # Show ground truth and template
 ground_truth.show('Ground truth')
 template.show('Template')
 
 # Give step size for solver
-eps = 0.02
+#eps = 0.0025 #for recon
+eps = 0.02 #for match
 
 # Give regularization parameter
-lamb = 0.05
+#lamb = 1.0 #for recon
+lamb = 0.05 #for match
 
 # Fix the sigma parameter for Gaussian kernel
 sigma = 5.0
 
 if aim == 'reconstruction':
     # Give the number of directions
-    num_angles = 10
+    num_angles = 20
     
     # Create the uniformly distributed directions
-    angle_partition = odl.uniform_partition(0, np.pi, num_angles,
+    angle_partition = odl.uniform_partition(0, np.pi / 2, num_angles,
                                             nodes_on_bdry=[(True, False)])
     
     # Create 2-D projection domain
     # The length should be 1.5 times of that of the reconstruction space
-    detector_partition = odl.uniform_partition(-24, 24, 92)
+    detector_partition = odl.uniform_partition(-24, 24, 620)
     
     # Create 2-D parallel projection geometry
     geometry = odl.tomo.Parallel2dGeometry(angle_partition,
@@ -125,16 +129,16 @@ elif aim == 'matching':
     
 
 # Create projection data by calling the ray transform on the phantom
-data = op(ground_truth)
+nonoise_data = op(ground_truth)
 
 # Add white Gaussion noise onto the noiseless data
 noise = odl.phantom.white_noise(op.range) * 0.0
 
 # Create the noisy projection data
-noise_data = data + noise
+noise_data = nonoise_data + noise
 
 # Compute the signal-to-noise ratio in dB
-snr = snr(data, noise, impl='dB')
+snr = snr(nonoise_data, noise, impl='dB')
 
 # Output the signal-to-noise ratio
 print('snr = {!r}'.format(snr))
@@ -151,5 +155,5 @@ rec_result, E = OIT_solver(op, template, noise_data, niter, eps, lamb,
                            inv_intia_op, aim, metric, group_action, callback)
 
 # Show result
-show_result(template, ground_truth, rec_result, data,
+show_result(template, ground_truth, rec_result, nonoise_data,
             noise_data, aim, energy=E)

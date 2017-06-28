@@ -238,7 +238,7 @@ def OIT_solver(forward_op, template, data, niter, eps, lamb,
     
     The regularization term in model is:
         
-        .. math:: \lambda \|\sqrt{|D\phi^{-1}|} - 1\|_2^2
+        .. math:: \lambda \|\sqrt{|D\phi^{-1}|} - 1\|_2^2,
     
     where :math:`|D\phi^{-1}|` is the Jacobian determinant of the inverse
     of diffeomorphic deformation.

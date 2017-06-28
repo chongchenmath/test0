@@ -62,7 +62,7 @@ def show_result(template, ground_truth, rec_result, nonoise_data, noise_data,
         Given target
     rec_result : `DiscreteLpElement`
         Result.
-    data : `DiscreteLpElement`
+    nonoise_data : `DiscreteLpElement`
         Noise-free data.
     noise_data : `DiscreteLpElement`
         Used data.
@@ -81,6 +81,7 @@ def show_result(template, ground_truth, rec_result, nonoise_data, noise_data,
                    vmin=np.asarray(template).min(),
                    vmax=np.asarray(template).max())
         plt.axis('off')
+        plt.colorbar()
         plt.title('template')
         
         plt.subplot(2, 2, 2)
@@ -88,20 +89,24 @@ def show_result(template, ground_truth, rec_result, nonoise_data, noise_data,
                    vmin=np.asarray(rec_result).min(),
                    vmax=np.asarray(rec_result).max())
         plt.axis('off')
+        plt.colorbar()
         plt.title('rec_result')
         
         plt.subplot(2, 2, 3)
+        plt.plot(np.asarray(nonoise_data)[0], 'b', linewidth=1.0)
+        plt.plot(np.asarray(noise_data)[0], 'r', linewidth=0.5)
+        plt.axis([0, nonoise_data.shape[1] - 1,
+                  np.asarray(nonoise_data)[0].min() - 1,
+                  np.asarray(nonoise_data)[0].max() + 1])
+        plt.grid(True, linestyle='--')
+        
+        plt.subplot(2, 2, 4)
         plt.imshow(np.rot90(ground_truth), cmap='bone',
                    vmin=np.asarray(ground_truth).min(),
                    vmax=np.asarray(ground_truth).max())
         plt.axis('off')
+        plt.colorbar()
         plt.title('ground truth')
-        
-        plt.subplot(2, 2, 4)
-        plt.plot(np.asarray(nonoise_data)[0], 'b', linewidth=1.0)
-        plt.plot(np.asarray(noise_data)[0], 'r', linewidth=0.5)
-        plt.axis([0, nonoise_data.shape[1] - 1, -1, 9])
-        plt.grid(True, linestyle='--')
         
         if energy is not None:
             plt.figure(2, figsize=(8, 1.5))
@@ -121,6 +126,7 @@ def show_result(template, ground_truth, rec_result, nonoise_data, noise_data,
                    vmin=np.asarray(template).min(),
                    vmax=np.asarray(template).max())
         plt.axis('off')
+        plt.colorbar()
         plt.title('template')
         
         plt.subplot(1, 3, 2)
@@ -128,6 +134,7 @@ def show_result(template, ground_truth, rec_result, nonoise_data, noise_data,
                    vmin=np.asarray(rec_result).min(),
                    vmax=np.asarray(rec_result).max())
         plt.axis('off')
+        plt.colorbar()
         plt.title('match_result')
         
         plt.subplot(1, 3, 3)
@@ -135,6 +142,7 @@ def show_result(template, ground_truth, rec_result, nonoise_data, noise_data,
                    vmin=np.asarray(ground_truth).min(),
                    vmax=np.asarray(ground_truth).max())
         plt.axis('off')
+        plt.colorbar()
         plt.title('ground truth')
         
         if energy is not None:
